@@ -3,6 +3,10 @@ const { ApolloServer, gql } = require('apollo-server-express');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+require('dotenv').config();
+const db = require('./db');
+const DB_HOST = process.env.DB_HOST;
+
 //mock data
 let notes = [
   { id: '1', content: 'This is note', author: 'Adam Scott' },
@@ -50,6 +54,8 @@ const resolvers = {
     }
   }
 };
+
+db.connect(DB_HOST);
 
 //Настройка Apollo Server
 const server = new ApolloServer({ typeDefs, resolvers });
