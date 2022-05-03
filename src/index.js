@@ -1,65 +1,29 @@
 const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
+const { ApolloServer } = require('apollo-server-express');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 require('dotenv').config();
 const db = require('./db');
 const DB_HOST = process.env.DB_HOST;
-
 const models = require('./models');
 
-//mock data
-// let notes = [
-//   { id: '1', content: 'This is note', author: 'Adam Scott' },
-//   { id: '2', content: 'This is another note', author: 'Harlow Everly' },
-//   { id: '3', content: 'This is another-another note', author: 'Riley Harrison' }
-// ];
-
 //схемы GraphQL
-const typeDefs = gql`
-  type Query {
-    hello: String!
-    notes: [Note!]!
-    note(id: ID!): Note!
-  }
-
-  type Note {
-    id: ID!
-    content: String!
-    author: String!
-  }
-
-  type Mutation {
-    newNote(content: String!): Note!
-  }
-`;
+const typeDefs = require('./schemas');
 
 //функции разрешения для полей схемы
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world',
-    notes: async () => {
-      return await models.Note.find();
-    },
-    note: async (parent, args) => {
-      return await models.Note.findById(args.id);
-    }
-  },
-  Mutation: {
-    newNote: async (parent, args) => {
-      return await models.Note.create({
-        content: args.content,
-        author: 'K.B.'
-      });
-    }
-  }
-};
+const resolvers = require('./resolvers');
 
 db.connect(DB_HOST);
 
 //Настройка Apollo Server
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: () => {
+    return { models };
+  }
+});
 server.applyMiddleware({ app, path: '/api' });
 
 app.get('/', (req, res) => res.send('Hello World'));
